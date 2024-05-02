@@ -55,15 +55,15 @@ class AuthController {
         login,
       ]);
       if (user.rows.length === 0) {
-        return res.status(400).json({
-          response: { status: 400 },
+        return res.status(403).json({
+          response: { status: 403 },
           message: `Пользователь ${login} не найден`,
         });
       }
       const validPassword = bcrypt.compareSync(password, user.rows[0].password);
       if (!validPassword) {
-        return res.status(400).json({
-          response: { status: 400 },
+        return res.status(403).json({
+          response: { status: 403 },
           message: "Введен неверный пароль",
         });
       }
