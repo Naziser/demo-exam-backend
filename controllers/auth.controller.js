@@ -4,19 +4,18 @@ const jwt = require("jsonwebtoken");
 
 const { secret } = require("../config.js");
 
-const generateAccessToken = (id, roles) => {
-  const payload = { id, roles };
+const generateAccessToken = (id, login, full_name, phone, email, role) => {
+  const payload = { id, login, full_name, phone, email, role };
   return jwt.sign(payload, secret, { expiresIn: "24h" });
 };
 
 class AuthController {
   async registration(req, res) {
     try {
-      const { username, password, full_name, phone, email } = req.body;
-      const candidate = await db.query(
-        "SELECT * FROM users where username = $1",
-        [username]
-      );
+      const { login, password, full_name, phone, email } = req.body;
+      const candidate = await db.query("SELECT * FROM users where login = $1", [
+        login,
+      ]);
       if (candidate.rows.length > 0) {
         return res.status(400).json({
           response: {
@@ -26,20 +25,9 @@ class AuthController {
         });
       }
       const hashPassword = bcrypt.hashSync(password, 7);
-      // Получение ID роли "USER"
-      const userRoleId = await db.query(
-        "SELECT id FROM roles WHERE value = $1",
-        ["USER"]
-      );
-      // Создание нового пользователя
       const user = await db.query(
-        "INSERT INTO users (username, password, full_name, phone, email) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, full_name, phone, email",
-        [username, hashPassword, full_name, phone, email]
-      );
-      // Связывание пользователя с ролью
-      const insertUserRoleText = await db.query(
-        "INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)",
-        [user.rows[0].id, userRoleId.rows[0].id]
+        "INSERT INTO users (login, password, full_name, phone, email) VALUES ($1, $2, $3, $4, $5) RETURNING id, login, full_name, phone, email, role",
+        [login, hashPassword, full_name, phone, email]
       );
 
       return res.status(200).json({
@@ -62,22 +50,14 @@ class AuthController {
 
   async login(req, res) {
     try {
-      const { username, password } = req.body;
-      const user = await db.query(
-    `
-      SELECT users.id, users.password, ARRAY_AGG(roles.value) AS roles
-      FROM users
-      LEFT JOIN user_roles ON users.id = user_roles.user_id
-      LEFT JOIN roles ON user_roles.role_id = roles.id
-      WHERE users.username = $1
-      GROUP BY users.id
-    `,
-        [username]
-      );
+      const { login, password } = req.body;
+      const user = await db.query("SELECT * from users where login = $1", [
+        login,
+      ]);
       if (user.rows.length === 0) {
         return res.status(400).json({
           response: { status: 400 },
-          message: `Пользователь ${username} не найден`,
+          message: `Пользователь ${login} не найден`,
         });
       }
       const validPassword = bcrypt.compareSync(password, user.rows[0].password);
@@ -87,8 +67,8 @@ class AuthController {
           message: "Введен неверный пароль",
         });
       }
-      const token = generateAccessToken(user.rows[0].id, user.rows[0].roles);
-      return res.json({token});
+      const token = generateAccessToken(user.rows[0].id, user.rows[0].login, user.rows[0].full_name, user.rows[0].phone, user.rows[0].email, user.rows[0].role);
+      return res.json({ token });
     } catch (e) {
       console.log(e);
       res
@@ -97,10 +77,15 @@ class AuthController {
     }
   }
 
+  async check(req, res) {
+    const token = generateAccessToken(req.user.id, req.user.login, req.user.full_name, req.user.phone, req.user.email, req.user.role);
+    return res.json({ response: { status: 200 }, payload: { active: true, token } });
+  }
+
   async getUsers(req, res) {
     try {
-        const users = await db.query('SELECT * FROM users');
-        res.status(200).json({response: { status: 200 }, payload: users.rows});
+      const users = await db.query("SELECT * FROM users");
+      res.status(200).json({ response: { status: 200 }, payload: users.rows });
     } catch (e) {
       console.log(e);
     }
