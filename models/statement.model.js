@@ -1,8 +1,21 @@
 const db = require("../db");
 
 class Statement {
-  static async findByUserId(userId) {
-    return db.query("SELECT * FROM statements WHERE user_id = $1", [userId]);
+  static async findByUserId(userId, limit, offset) {
+    const statements = await db.query(
+      "SELECT * FROM statements WHERE user_id = $1 ORDER BY id LIMIT $2 OFFSET $3",
+      [userId, limit, offset]
+    );
+
+    const countResult = await db.query(
+      "SELECT COUNT(*) FROM statements WHERE user_id = $1",
+      [userId]
+    );
+
+    return {
+      data: statements.rows,
+      totalItems: parseInt(countResult.rows[0].count, 10),
+    };
   }
 
   static async create(userId, vehicleRegistrationNumber, violationDescription) {
