@@ -118,3 +118,9 @@ INNER JOIN: Возвращает строки, когда есть соотве�
 LEFT JOIN (или LEFT OUTER JOIN): Возвращает все строки из левой таблицы и соответствующие строки из правой таблицы. Если соответствие отсутствует, результат будет содержать NULL на месте столбцов правой таблицы.
 RIGHT JOIN (или RIGHT OUTER JOIN): Возвращает все строки из правой таблицы и соответствующие строки из левой таблицы. Если соответствие отсутствует, результат будет содержать NULL на месте столбцов левой таблицы.
 FULL JOIN (или FULL OUTER JOIN): Возвращает строки, когда есть соответствие в одной из таблиц.
+
+https://www.figma.com/file/bqA20bLfyDHinlsARtNSId/Untitled?type=design&mode=design&t=qktdV425XozLU16v-0
+https://www.figma.com/file/bqA20bLfyDHinlsARtNSId/Untitled?type=design&mode=dev&t=qktdV425XozLU16v-1
+
+https://www.figma.com/file/nIhMzZGHY50DmJyWiRTmkr/Project-%2F-SR-Data-2024?type=design&node-id=2-2&mode=design&t=9qCCPBILrHLgXrAk-0
+https://www.figma.com/file/ozktUwPvRUGRS9rW6laUXD/Design-System-%2F-2024?type=design&node-id=0-1&mode=design&t=ojXUJHYApMDJHI5k-0
