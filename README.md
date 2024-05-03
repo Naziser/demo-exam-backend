@@ -2,6 +2,9 @@
 
 drop table users cascade;
 
+TRUNCATE TABLE users RESTART IDENTITY CASCADE;
+TRUNCATE TABLE statements RESTART IDENTITY CASCADE;
+
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   login  VARCHAR(255) UNIQUE NOT NULL,
@@ -24,13 +27,88 @@ INSERT INTO statements (user_id, vehicle_registration_number, violation_descript
 (2, 'A123BC', 'Неправильная парковка', 'Confirmed'),
 (2, 'B456CD', 'Превышение скоростного режима', 'Pending');
 
-TRUNCATE TABLE users RESTART IDENTITY CASCADE;
+----------------------------------------------------------------------------------------------------------
 
-TRUNCATE TABLE statements RESTART IDENTITY CASCADE;
+CREATE TABLE authors (
+    id SERIAL PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL
+);
 
--- SELECT users.id, users.password, ARRAY_AGG(roles.value) AS roles
---      FROM users
---      LEFT JOIN user_roles ON users.id = user_roles.user_id
---      LEFT JOIN roles ON user_roles.role_id = roles.id
---      WHERE users.username = 'Naziser'
---      GROUP BY users.id;
+CREATE TABLE genres (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE books (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    type VARCHAR(100),
+    author_id INTEGER REFERENCES authors(id),
+    genre_id INTEGER REFERENCES genres(id)
+);
+
+CREATE TABLE groups (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE user_groups (
+    user_id INTEGER REFERENCES users(id),
+    group_id INTEGER REFERENCES groups(id),
+    PRIMARY KEY (user_id, group_id)
+);
+
+INSERT INTO authors (full_name) VALUES
+('Leo Tolstoy'),
+('Fyodor Dostoevsky');
+
+INSERT INTO genres (name) VALUES
+('Fiction'),
+('Non-Fiction');
+
+INSERT INTO books (title, type, author_id, genre_id) VALUES
+('War and Peace', 'Hardcover', 1, 1),
+('Crime and Punishment', 'Paperback', 2, 1);
+
+INSERT INTO groups (name) VALUES
+('Admins'),
+('Regular Users');
+
+INSERT INTO user_groups (user_id, group_id) VALUES
+(2, 1),
+(1, 2);
+
+-- Присоединение книг к их авторам
+SELECT b.title, b.type, a.full_name AS author
+FROM books b
+JOIN authors a ON b.author_id = a.id;
+
+--Присоединение книг к их жанрам
+SELECT b.title, g.name AS genre
+FROM books b
+JOIN genres g ON b.genre_id = g.id;
+
+--Присоединение книг к их авторам и жанрам
+SELECT b.title, b.type, a.full_name AS author, g.name AS genre
+FROM books b
+JOIN authors a ON b.author_id = a.id
+JOIN genres g ON b.genre_id = g.id;
+
+--Соединение пользователей с группами через промежуточную таблицу
+SELECT u.full_name, u.email, g.name AS group_name
+FROM users u
+JOIN user_groups ug ON u.id = ug.user_id
+JOIN groups g ON ug.group_id = g.id;
+
+--Получение информации о пользователях с фильтрацией по роли и группе
+SELECT u.full_name, u.role, g.name AS group_name
+FROM users u
+JOIN user_groups ug ON u.id = ug.user_id
+JOIN groups g ON ug.group_id = g.id
+WHERE u.role = 'ADMIN';
+
+--Вывод пользователей и их данных без групп
+SELECT u.full_name, u.email
+FROM users u
+LEFT JOIN user_groups ug ON u.id = ug.user_id
+WHERE ug.group_id IS NULL;
