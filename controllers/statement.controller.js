@@ -20,6 +20,21 @@ class StatementController {
     }
   }
 
+  async getStatementById(req, res) {
+    try {
+      const { id } = req.query;
+      const statement = await Statement.findById(id);
+      if (statement) {
+        res.json(statement);
+      } else {
+        res.status(404).json({ message: "Заявление не найдено" });
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ message: "Ошибка при получении заявления" });
+    }
+  }
+
   async createStatement(req, res) {
     try {
       const { id } = req.user;

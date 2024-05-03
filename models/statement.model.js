@@ -18,6 +18,14 @@ class Statement {
     };
   }
 
+  static async findById(id) {
+    const result = await db.query(
+      "SELECT * FROM statements WHERE id = $1",
+      [id]
+    );
+    return result.rows[0];
+  }
+
   static async create(userId, vehicleRegistrationNumber, violationDescription) {
     return db.query(
       "INSERT INTO statements (user_id, vehicle_registration_number, violation_description) VALUES ($1, $2, $3) RETURNING *",
